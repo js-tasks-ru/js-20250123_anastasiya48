@@ -7,7 +7,7 @@
 export const pick = (obj, ...fields) => {
   const result = {};
   
-  fields.slice().map((item) => result[item] = obj[item]);
+  fields.map((item) => result[item] = obj[item]);
 
   return result;
 };
