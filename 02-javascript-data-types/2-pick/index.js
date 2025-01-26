@@ -6,8 +6,8 @@
  */
 export const pick = (obj, ...fields) => {
   const result = {};
-  
-  fields.map((item) => result[item] = obj[item]);
+
+  fields.forEach((item) => result[item] = obj[item]);
 
   return result;
 };
