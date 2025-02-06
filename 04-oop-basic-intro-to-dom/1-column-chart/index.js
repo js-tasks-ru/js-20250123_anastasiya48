@@ -63,7 +63,7 @@ export default class ColumnChart {
   }
 
   remove() {
-    this.element = null;
+    this.element.remove();
   }
 
   getColumnProps(data) {
@@ -78,5 +78,7 @@ export default class ColumnChart {
     });
   }
 
-  destroy() {}
+  destroy() {
+    this.remove();
+  }
 }
