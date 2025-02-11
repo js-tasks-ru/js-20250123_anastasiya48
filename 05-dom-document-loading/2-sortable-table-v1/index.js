@@ -65,14 +65,10 @@ export default class SortableTable {
     let html = '';
 
     this.headerConfig.forEach((el) => {
-      if (el.id === 'images') {
-        html += `
-          <div class="sortable-table__cell">
-            <img class="sortable-table-image" alt="Image" src="${el.id?.[0].url ?? 'https://via.placeholder.com/32'}">
-          </div>
-        `;
+      if (el.template) {
+        html += template(element);
       } else if (el.id in element && el.id !== 'id') {
-        html += `<div class="sortable-table__cell">${element[el.id]}</div>`
+        html += `<div class="sortable-table__cell">${element[el.id]}</div>`;
       }
     });
 
