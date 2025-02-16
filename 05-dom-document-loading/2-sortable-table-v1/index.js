@@ -1,7 +1,5 @@
 export default class SortableTable {
   subElements = {}
-  sortElements = []
-  static lastArrowElement;
 
   constructor(headerConfig = [], data = []) {
     this.headerConfig = headerConfig;
@@ -52,9 +50,7 @@ export default class SortableTable {
   }
 
   createProductsList() {
-    const data = this.sortElements.length ? this.sortElements : this.data;
-
-    return data.map((item) => (`
+    return this.data.map((item) => (`
       <a href="/products/${item.id}" class="sortable-table__row">
         ${this.createList(item)}
       </a>
@@ -66,7 +62,7 @@ export default class SortableTable {
 
     this.headerConfig.forEach((el) => {
       if (el.template) {
-        html += template(element);
+        html += el.template(element);
       } else if (el.id in element && el.id !== 'id') {
         html += `<div class="sortable-table__cell">${element[el.id]}</div>`;
       }
@@ -79,65 +75,53 @@ export default class SortableTable {
     this.field = fieldValue;
     this.order = orderValue;
 
-    this.createSortArrowElement();
-
     let sortType = this.headerConfig.find(item => item.id === fieldValue).sortType;
 
     if (sortType === 'string') {
-      this.sortElements = this.sortStrings(fieldValue, orderValue);
+      this.sortStrings(fieldValue, orderValue);
       this.updateProductsList();
     }
 
     if (sortType === 'number') {
-      this.sortElements = this.sortNumbers(fieldValue, orderValue);
+      this.sortNumbers(fieldValue, orderValue);
       this.updateProductsList();
     }
   }
 
   sortStrings(field, orde) {  
-    const data = [...this.data];
-
     if (orde == 'asc') {
-      return data.sort((a, b) => a[field].localeCompare(b[field], ['ru', 'en'], {caseFirst: 'upper'}));
+      return this.data.sort((a, b) => a[field].localeCompare(b[field], ['ru', 'en'], {caseFirst: 'upper'}));
     } 
     
     if (orde == 'desc') {
-      return data.sort((a, b) => b[field].localeCompare(a[field], ['ru', 'en'], {caseFirst: 'lower'}));
+      return this.data.sort((a, b) => b[field].localeCompare(a[field], ['ru', 'en'], {caseFirst: 'lower'}));
     }
   }
 
   sortNumbers(field, orde) {
-    const data = [...this.data];
-
     if (orde == 'asc') {
-      return data.sort((a, b) => a[field] - b[field]);
+      return this.data.sort((a, b) => a[field] - b[field]);
     } 
     
     if (orde == 'desc') {
-      return data.sort((a, b) => b[field] - a[field]);
+      return this.data.sort((a, b) => b[field] - a[field]);
     }
   }
 
   createSortArrowElement() {
-    if (SortableTable.lastArrowElement) {
-      SortableTable.lastArrowElement.remove();
-    }
+    const header = this.headerConfig.map(el => el.id);
 
     let arrowElement = document.createElement('div');
     arrowElement.innerHTML = '<span data-element="arrow" class="sortable-table__sort-arrow"><span class="sort-arrow"></span></span>';
 
-    let field = this.subElements.header.children.item("this.field")
-    field.append(arrowElement);
+    let field = this.subElements.header.children.item(header.indexOf(this.field));
+    field.append(arrowElement.firstElementChild);
 
-    SortableTable.lastArrowElement = arrowElement.firstElementChild;
+    return arrowElement;
   }
 
   updateProductsList() {
     this.subElements.body.innerHTML = this.createProductsList();
-
-    Object.entries(this.subElements).forEach(([key, value]) => {
-      this.element.querySelectorAll(`[data-element="${key}"]`).innerHTML = value;
-    });
   }
 
   remove() {
