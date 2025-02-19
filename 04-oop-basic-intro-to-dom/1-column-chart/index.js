@@ -1,4 +1,6 @@
 export default class ColumnChart {
+  subElements = {}
+
   constructor({    
     data = [],
     label = '',
@@ -14,6 +16,13 @@ export default class ColumnChart {
 
     this.chartHeight = 50;
     this.element = this.getDivElement();
+    this.selectSubElements();
+  }
+
+  selectSubElements() {
+    this.element.querySelectorAll('[data-element]').forEach(element => {
+      this.subElements[element.dataset.element] = element;
+    });
   }
 
   getDivElement() {
@@ -47,19 +56,30 @@ export default class ColumnChart {
     if (this.link) {
       return `<a href="${this.link}" class="column-chart__link">View all</a>`;
     }
+    return '';
   }
 
   createBodyElements() {
     let body = '';
-
     this.getColumnProps(this.data).forEach((el) => body += `<div style="--value: ${el.value}" data-tooltip="${el.percent}"></div>`);
 
     return body;
   }
 
+  checkSkeleton() {
+    const templateWithLoading = document.querySelector('[class="column-chart column-chart_loading"]');
+
+    if (templateWithLoading) {
+      templateWithLoading.classList.remove('column-chart_loading');
+    }
+  }
+
   update(newData) {
     this.data = newData;
-    document.querySelector('div[data-element="body"]').innerHTML = this.createBodyElements();
+    this.checkSkeleton();
+
+    this.subElements.body.innerHTML = this.createBodyElements();
+    this.subElements.header.innerHTML = this.formatHeading(this.value);
   }
 
   remove() {
