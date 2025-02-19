@@ -75,7 +75,7 @@ export default class SortableTable {
     this.field = fieldValue;
     this.order = orderValue;
 
-    let sortType = this.headerConfig.find(item => item.id === fieldValue).sortType;
+    let sortType = this.headerConfig.find(item => item.id === fieldValue)?.sortType;
 
     if (sortType === 'string') {
       this.sortStrings(fieldValue, orderValue);
@@ -115,7 +115,11 @@ export default class SortableTable {
     arrowElement.innerHTML = '<span data-element="arrow" class="sortable-table__sort-arrow"><span class="sort-arrow"></span></span>';
 
     let field = this.subElements.header.children.item(header.indexOf(this.field));
-    field.append(arrowElement.firstElementChild);
+
+    if (field) {
+      field.append(arrowElement.firstElementChild);
+    }
+    // field.append(arrowElement.firstElementChild);
 
     return arrowElement;
   }

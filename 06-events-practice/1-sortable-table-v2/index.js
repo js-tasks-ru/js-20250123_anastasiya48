@@ -10,7 +10,7 @@ export default class SortableTable extends SortableTableV1 {
     
     super(headersConfig, data);
 
-    this.sortField = sorted.id;
+    this.sortField = sorted.id ?? 'title';
     this.sortOder = sorted.order ?? 'asc';
 
     this.createListeners();
@@ -35,15 +35,15 @@ export default class SortableTable extends SortableTableV1 {
     this.sortField = cellElement.dataset.id;
     this.sortOder = this.sortOder === 'asc' ? 'desc' : 'asc';
 
-    this.sort(this.sortField, this.sortOder);
-  }
-
-  sort (sortField, sortOder) {
     if (this.isSortLocally) {
-      super.sort(sortField, sortOder);
+      this.sortOnClient();
     } else {
       this.sortOnServer();
     }
+  }
+
+  sortOnClientrt() {
+    super.sort(this.sortField, this.sortOder);
   }
 
   createListeners() {
