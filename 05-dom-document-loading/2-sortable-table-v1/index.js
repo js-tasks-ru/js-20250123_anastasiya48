@@ -7,6 +7,7 @@ export default class SortableTable {
 
     this.order = '';
     this.field = '';
+
     this.element = this.createElement(this.createTamplate());
     this.selectSubElements();
   }
@@ -52,19 +53,19 @@ export default class SortableTable {
   createProductsList() {
     return this.data.map((item) => (`
       <a href="/products/${item.id}" class="sortable-table__row">
-        ${this.createList(item)}
+        ${this.createTableRowTemplate(item)}
       </a>
       `)).join('');
   }
 
-  createList(element) {
+  createTableRowTemplate(data) {
     let html = '';
 
-    this.headerConfig.forEach((el) => {
-      if (el.template) {
-        html += el.template(element);
-      } else if (el.id in element && el.id !== 'id') {
-        html += `<div class="sortable-table__cell">${element[el.id]}</div>`;
+    this.headerConfig.forEach((columnConfig) => {
+      if (columnConfig.template) {
+        html += columnConfig.template(data[columnConfig.id]);
+      } else if (columnConfig.id in data && columnConfig.id !== 'id') {
+        html += `<div class="sortable-table__cell">${data[columnConfig.id]}</div>`;
       }
     });
 
@@ -112,16 +113,16 @@ export default class SortableTable {
     const header = this.headerConfig.map(el => el.id);
 
     let arrowElement = document.createElement('div');
-    arrowElement.innerHTML = '<span data-element="arrow" class="sortable-table__sort-arrow"><span class="sort-arrow"></span></span>';
+    arrowElement.innerHTML = `       
+      <span data-element="arrow" class="sortable-table__sort-arrow">
+        <span class="sort-arrow"></span>
+      </span>
+    `;
 
     let field = this.subElements.header.children.item(header.indexOf(this.field));
+    field.append(arrowElement.firstElementChild);
 
-    if (field) {
-      field.append(arrowElement.firstElementChild);
-    }
-    // field.append(arrowElement.firstElementChild);
-
-    return arrowElement;
+    return field.children[1];
   }
 
   updateProductsList() {
