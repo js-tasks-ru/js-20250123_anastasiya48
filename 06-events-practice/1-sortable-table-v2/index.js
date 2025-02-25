@@ -2,6 +2,7 @@ import SortableTableV1 from "../../05-dom-document-loading/2-sortable-table-v1/i
 
 export default class SortableTable extends SortableTableV1 {
   isSortLocally = true
+  lastTargetCellElement
 
   constructor(headersConfig, {
     data = [],
@@ -30,11 +31,18 @@ export default class SortableTable extends SortableTableV1 {
       return;
     }
 
-    cellElement.append(this.arrowElement);
-
     this.sortField = cellElement.dataset.id;
     this.sortOder = this.sortOder === 'asc' ? 'desc' : 'asc';
 
+    cellElement.dataset.order = this.sortOder;
+    cellElement.append(this.arrowElement);
+
+    this.lastTargetCellElement = cellElement;
+
+    this.sort();
+  }
+
+  sort() {
     if (this.isSortLocally) {
       this.sortOnClient();
     } else {
@@ -42,9 +50,11 @@ export default class SortableTable extends SortableTableV1 {
     }
   }
 
-  sortOnClientrt() {
+  sortOnClient() {
     super.sort(this.sortField, this.sortOder);
   }
+
+  sortOnServer() {}
 
   createListeners() {
     this.subElements.header.addEventListener('pointerdown', this.handleHeaderCellClick);
