@@ -19,8 +19,8 @@ export default class SortableTable extends SortableTableV1 {
     this.arrowElement = super.createSortArrowElement();
   }
 
-  handleHeaderCellClick = (e) => {
-    const cellElement = e.target.closest('.sortable-table__cell');
+  handleHeaderCellClick(event) {
+    const cellElement = event.target.closest('.sortable-table__cell');
     const sortable = cellElement.dataset.sortable;
 
     if (!cellElement) {
@@ -57,6 +57,8 @@ export default class SortableTable extends SortableTableV1 {
   sortOnServer() {}
 
   createListeners() {
+    this.handleHeaderCellClick = this.handleHeaderCellClick.bind(this);
+    
     this.subElements.header.addEventListener('pointerdown', this.handleHeaderCellClick);
   }
 

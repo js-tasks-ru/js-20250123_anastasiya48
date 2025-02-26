@@ -6,7 +6,10 @@ export default class SortableTable extends SortableTableV2 {
   startLoading = 0
   endLoading = 30
   stepLoading = 10
+
   isLoading = false
+  shouldLoad = true
+  isSorting = false
 
   constructor(headersConfig, {
     url = '',
@@ -14,13 +17,23 @@ export default class SortableTable extends SortableTableV2 {
     super(headersConfig);
     this.url = url;
     this.isSortLocally = false;
+    this.createLoadingElement();
 
     this.render(this.createUrl(this.startLoading, this.endLoading));
+  }
+
+  createLoadingElement() {
+    let loadingElement = document.createElement('div');
+    loadingElement.innerHTML = `<div data-element="loading" class="loading-line sortable-table__loading-line"></div>`;
+
+    let field = this.element.querySelector('.sortable-table');
+    field.append(loadingElement.firstElementChild);
   }
 
   createUrl(start, end) {
     const url = new URL(this.url, BACKEND_URL);
 
+    url.searchParams.append('_embed', 'subcategory.category');
     url.searchParams.append('_sort', this.sortField);
     url.searchParams.append('_order', this.sortOder);
     url.searchParams.append('_start', start);
@@ -30,16 +43,35 @@ export default class SortableTable extends SortableTableV2 {
   }
 
   async render(url) {
+    if (this.isLoading) {
+      return;
+    }
+
+    if (!this.shouldLoad) {
+      return;
+    }
+    
     try {
+      this.isLoading = true;
+      this.shouldLoad = true;
+      
       const response = await fetchJson(url);
 
-      if (this.isLoading) {
+      if (response.length === 0) {
+        alert("По заданному критерию запроса данные отсутствуют");
+        this.shouldLoad = false;
+      }
+
+      if (!this.isSorting) {
         this.data = [...this.data, ...response];
       } else {
         this.data = response;
+        this.isSorting = false;
       }
 
       super.updateProductsList();
+
+      this.isLoading = false;
 
     } catch (err) {
       console.log(err);
@@ -50,16 +82,28 @@ export default class SortableTable extends SortableTableV2 {
     const documentHeight = document.body.clientHeight;
     const windowHeight = window.innerHeight;
     const scrolled = window.scrollY;
+
     const shouldFetch = scrolled + windowHeight >= documentHeight - 200;
 
     if (shouldFetch) {
-      this.isLoading = true;
-
       this.startLoading += this.stepLoading;
       this.endLoading += this.stepLoading;
 
-      await this.render(this.createUrl(this.startLoading, this.endLoading))
+      await this.render(this.createUrl(this.startLoading, this.endLoading));
     }
+  }
+
+  async sortOnServer () {
+    this.isSorting = true;
+
+    this.startLoading = 0;
+    this.endLoading = this.stepLoading;
+
+    await this.render(this.createUrl(this.startLoading, this.endLoading));
+  }
+
+  sortOnClient() {
+    super.sort(this.sortField, this.sortOder);
   }
 
   createListeners() {
@@ -73,18 +117,5 @@ export default class SortableTable extends SortableTableV2 {
   destroyListeners() {
     super.destroyListeners();
     window.removeEventListener('scroll', this.handleWindowScroll);
-  }
-
-  async sortOnServer () {
-    this.isLoading = false;
-
-    this.startLoading = 0;
-    this.endLoading = this.stepLoading;
-
-    await this.render(this.createUrl(this.startLoading, this.endLoading));
-  }
-
-  sortOnClientrt() {
-    super.sort(this.sortField, this.sortOder);
   }
 }
