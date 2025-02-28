@@ -2,24 +2,24 @@ import fetchJson from './utils/fetch-json.js';
 import SortableTableV2 from "../../06-events-practice/1-sortable-table-v2/index.js";
 
 const BACKEND_URL = 'https://course-js.javascript.ru';
-export default class SortableTable extends SortableTableV2 {
+
+export default class SortableTableV3 extends SortableTableV2 {
   startLoading = 0
   endLoading = 30
   stepLoading = 10
 
   isLoading = false
-  shouldLoad = true
   isSorting = false
 
   constructor(headersConfig, {
     url = '',
+    data,
+    sorted,
+    isSortLocally = false
   } = {}) {
-    super(headersConfig);
+    super(headersConfig, { data, sorted, isSortLocally });
     this.url = url;
-    this.isSortLocally = false;
     this.createLoadingElement();
-
-    this.render(this.createUrl(this.startLoading, this.endLoading));
   }
 
   createLoadingElement() {
@@ -30,37 +30,28 @@ export default class SortableTable extends SortableTableV2 {
     field.append(loadingElement.firstElementChild);
   }
 
-  createUrl(start, end) {
+  createUrl() {
     const url = new URL(this.url, BACKEND_URL);
 
     url.searchParams.append('_embed', 'subcategory.category');
-    url.searchParams.append('_sort', this.sortField);
-    url.searchParams.append('_order', this.sortOder);
-    url.searchParams.append('_start', start);
-    url.searchParams.append('_end', end);
+    url.searchParams.append('_sort', this.field);
+    url.searchParams.append('_order', this.order);
+    url.searchParams.append('_start', this.startLoading);
+    url.searchParams.append('_end', this.endLoading);
 
     return url.toString();
   }
 
-  async render(url) {
+  async render() {
     if (this.isLoading) {
       return;
     }
 
-    if (!this.shouldLoad) {
-      return;
-    }
-    
     try {
       this.isLoading = true;
-      this.shouldLoad = true;
       
+      const url = this.createUrl();
       const response = await fetchJson(url);
-
-      if (response.length === 0) {
-        alert("По заданному критерию запроса данные отсутствуют");
-        this.shouldLoad = false;
-      }
 
       if (!this.isSorting) {
         this.data = [...this.data, ...response];
@@ -89,21 +80,20 @@ export default class SortableTable extends SortableTableV2 {
       this.startLoading += this.stepLoading;
       this.endLoading += this.stepLoading;
 
-      await this.render(this.createUrl(this.startLoading, this.endLoading));
+      await this.render();
     }
   }
 
-  async sortOnServer () {
+  async sortOnServer(field, order) {
+    this.field = field;
+    this.order = order;
+
     this.isSorting = true;
 
     this.startLoading = 0;
     this.endLoading = this.stepLoading;
 
-    await this.render(this.createUrl(this.startLoading, this.endLoading));
-  }
-
-  sortOnClient() {
-    super.sort(this.sortField, this.sortOder);
+    await this.render();
   }
 
   createListeners() {
