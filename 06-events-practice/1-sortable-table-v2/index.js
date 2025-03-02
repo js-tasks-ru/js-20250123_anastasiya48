@@ -1,25 +1,22 @@
 import SortableTableV1 from "../../05-dom-document-loading/2-sortable-table-v1/index.js";
 
-export default class SortableTable extends SortableTableV1 {
-  isSortLocally = true
+export default class SortableTableV2 extends SortableTableV1 {
+  lastTargetCellElement
 
   constructor(headersConfig, {
     data = [],
-    sorted = {}
+    sorted = {},
+    isSortLocally = true,
   } = {}) {
-    
     super(headersConfig, data);
 
-    this.sortField = sorted.id;
-    this.sortOder = sorted.order ?? 'asc';
-
+    this.isSortLocally = isSortLocally;
     this.createListeners();
-    super.sort(this.sortField, this.sortOder);
-    this.arrowElement = super.createSortArrowElement();
+    this.sort(sorted.id, sorted.order);
   }
 
-  handleHeaderCellClick = (e) => {
-    const cellElement = e.target.closest('.sortable-table__cell');
+  handleHeaderCellClick(event) {
+    const cellElement = event.target.closest('.sortable-table__cell');
     const sortable = cellElement.dataset.sortable;
 
     if (!cellElement) {
@@ -30,23 +27,34 @@ export default class SortableTable extends SortableTableV1 {
       return;
     }
 
+    const field = cellElement.dataset.id;
+    const order = cellElement.dataset.order === 'desc' ? 'asc' : 'desc';
+
+    cellElement.dataset.order = order;
     cellElement.append(this.arrowElement);
 
-    this.sortField = cellElement.dataset.id;
-    this.sortOder = this.sortOder === 'asc' ? 'desc' : 'asc';
+    this.lastTargetCellElement = cellElement;
 
-    this.sort(this.sortField, this.sortOder);
+    this.sort(field, order);
   }
 
-  sort (sortField, sortOder) {
+  sort(field = 'title', order = 'asc') {
     if (this.isSortLocally) {
-      super.sort(sortField, sortOder);
+      this.sortOnClient(field, order);
     } else {
-      this.sortOnServer();
+      this.sortOnServer(field, order);
     }
   }
 
+  sortOnClient(field, order) {
+    super.sort(field, order);
+  }
+
+  sortOnServer(field, order) {}
+
   createListeners() {
+    this.handleHeaderCellClick = this.handleHeaderCellClick.bind(this);
+    
     this.subElements.header.addEventListener('pointerdown', this.handleHeaderCellClick);
   }
 

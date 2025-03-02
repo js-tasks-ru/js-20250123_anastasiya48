@@ -7,7 +7,9 @@ export default class SortableTable {
 
     this.order = '';
     this.field = '';
-    this.element = this.createElement(this.createTamplate());
+
+    this.element = this.createElement(this.createTemplate());
+    this.arrowElement = this.createElement(this.createArrowTemplate());
     this.selectSubElements();
   }
 
@@ -24,7 +26,7 @@ export default class SortableTable {
     return containerElement.firstElementChild;
   }
 
-  createTamplate() {
+  createTemplate() {
     return `
     <div data-element="productsContainer" class="products-list__container">
       <div class="sortable-table">
@@ -52,19 +54,19 @@ export default class SortableTable {
   createProductsList() {
     return this.data.map((item) => (`
       <a href="/products/${item.id}" class="sortable-table__row">
-        ${this.createList(item)}
+        ${this.createTableRowTemplate(item)}
       </a>
       `)).join('');
   }
 
-  createList(element) {
+  createTableRowTemplate(data) {
     let html = '';
 
-    this.headerConfig.forEach((el) => {
-      if (el.template) {
-        html += el.template(element);
-      } else if (el.id in element && el.id !== 'id') {
-        html += `<div class="sortable-table__cell">${element[el.id]}</div>`;
+    this.headerConfig.forEach((columnConfig) => {
+      if (columnConfig.template) {
+        html += columnConfig.template(data[columnConfig.id]);
+      } else if (columnConfig.id in data && columnConfig.id !== 'id') {
+        html += `<div class="sortable-table__cell">${data[columnConfig.id]}</div>`;
       }
     });
 
@@ -75,53 +77,62 @@ export default class SortableTable {
     this.field = fieldValue;
     this.order = orderValue;
 
-    let sortType = this.headerConfig.find(item => item.id === fieldValue).sortType;
+    const sortType = this.headerConfig.find(item => item.id === fieldValue)?.sortType;
 
     if (sortType === 'string') {
       this.sortStrings(fieldValue, orderValue);
       this.updateProductsList();
+      this.updateArrowPosition(fieldValue, orderValue);
     }
 
     if (sortType === 'number') {
       this.sortNumbers(fieldValue, orderValue);
       this.updateProductsList();
+      this.updateArrowPosition(fieldValue, orderValue);
     }
   }
 
-  sortStrings(field, orde) {  
-    if (orde == 'asc') {
+  sortStrings(field, order) {  
+    if (order == 'asc') {
       return this.data.sort((a, b) => a[field].localeCompare(b[field], ['ru', 'en'], {caseFirst: 'upper'}));
     } 
     
-    if (orde == 'desc') {
+    if (order == 'desc') {
       return this.data.sort((a, b) => b[field].localeCompare(a[field], ['ru', 'en'], {caseFirst: 'lower'}));
     }
   }
 
-  sortNumbers(field, orde) {
-    if (orde == 'asc') {
+  sortNumbers(field, order) {
+    if (order == 'asc') {
       return this.data.sort((a, b) => a[field] - b[field]);
     } 
     
-    if (orde == 'desc') {
+    if (order == 'desc') {
       return this.data.sort((a, b) => b[field] - a[field]);
     }
   }
 
-  createSortArrowElement() {
-    const header = this.headerConfig.map(el => el.id);
-
-    let arrowElement = document.createElement('div');
-    arrowElement.innerHTML = '<span data-element="arrow" class="sortable-table__sort-arrow"><span class="sort-arrow"></span></span>';
-
-    let field = this.subElements.header.children.item(header.indexOf(this.field));
-    field.append(arrowElement.firstElementChild);
-
-    return arrowElement;
+  createArrowTemplate() {
+    return `       
+      <span data-element="arrow" class="sortable-table__sort-arrow">
+        <span class="sort-arrow"></span>
+      </span>
+    `;
   }
 
   updateProductsList() {
     this.subElements.body.innerHTML = this.createProductsList();
+  }
+
+  updateArrowPosition(field, order) {
+    const headerColumnElement = this.subElements.header.querySelector(`[data-id=${field}][data-sortable="true"]`);
+
+    if (!headerColumnElement) {
+      return;
+    }
+
+    headerColumnElement.append(this.arrowElement);
+    headerColumnElement.dataset.order = order;
   }
 
   remove() {
