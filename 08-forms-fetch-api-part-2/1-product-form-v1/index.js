@@ -3,7 +3,7 @@ import fetchJson from './utils/fetch-json.js';
 
 const IMGUR_CLIENT_ID = '28aaa2e823b03b1';
 const BACKEND_URL = 'https://course-js.javascript.ru';
-const BACKEND_URL_IMG = 'https://api.imgur.com/3/image';
+// const BACKEND_URL_IMG = 'https://api.imgur.com/3/image';
 
 export default class ProductForm {
   static categories = [];
@@ -15,9 +15,18 @@ export default class ProductForm {
     this.productId = productId;
 
     this.url = '/api/rest/';
-    this.image = 'image';
     this.categories = 'categories';
     this.products = 'products';
+
+    this.formData = {
+      title: '',
+      description: '',
+      quantity: 0,
+      subcategory: '',
+      status: 0,
+      price: 0,
+      discount: 0
+    };
   }
 
   selectSubElements() {
@@ -182,17 +191,7 @@ export default class ProductForm {
   addInfoAboutProductFromServer() {
     const product = ProductForm.products[0];
 
-    const defaultFormData = {
-      title: '',
-      description: '',
-      quantity: 0,
-      subcategory: '',
-      status: 0,
-      price: 0,
-      discount: 0
-    };
-
-    const fields = Object.keys(defaultFormData);
+    const fields = Object.keys(this.formData);
 
     for (const field of fields) {
       // 3 тест не проходит c escapeHtml()
@@ -201,69 +200,98 @@ export default class ProductForm {
     }
   }
 
-  // async save() {
+  async save() {
+    for (const [key, value] of Object.entries(this.formData)) {
+      this.formData[key] = this.element.querySelector(`#${key}`).value;
+    }
 
-  // }
-
-  // onSaveBtnClick() {
-  //   console.log('click');
-  // }
-
-  async upload(file) {
-    const formData = new FormData();
-    formData.append("image", file);
+    this.formData.images = [ProductForm.products[0].images];
+    this.formData.id = ProductForm.products[0].id;
 
     try {
-      const url = new URL(BACKEND_URL_IMG);
+      const path = this.url + this.products;
+      const url = new URL(path, BACKEND_URL);
 
-      // ошибка CORS 
       const response = await fetchJson(url, {
         method: 'POST',
         headers: {
-          'Authentication': `Client-ID ${IMGUR_CLIENT_ID}`
+          'Content-Type': 'application/json'
         },
-        body: formData,
+        body: JSON.stringify(this.formData)
       });
 
-      const result = await response.json();
-      console.log("Успех:", JSON.stringify(result));
+      const result = await response;
+      console.log("Успех:", result);
 
-      elem.dispatchEvent("product-saved");
+      const event = new Event("product-updated");
+      this.element.dispatchEvent(event);
 
     } catch (error) {
       console.log("Ошибка:", error);
     }
   }
 
-  onUploadBtnClick() {
-    const inputElement = document.createElement('input');
-    inputElement.type = "file";
-    inputElement.accept = "image/*";
-    inputElement.style = "display:none";
-
-    document.body.append(inputElement);
-
-    inputElement.addEventListener("change", () => {
-      this.upload(inputElement.files[0]);
-    }, { once: true });
-
-    inputElement.click();
-
-    console.log('click');
+  onSaveBtnClick() {
+    this.save();
   }
 
+  // async upload(file) {
+  //   const formData = new FormData();
+  //   formData.append("image", file);
+
+  //   try {
+  //     const url = new URL(BACKEND_URL_IMG);
+
+  //     // ошибка CORS 
+  //     const response = await fetchJson(url, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Authentication': `Client-ID ${IMGUR_CLIENT_ID}`
+  //       },
+  //       body: formData,
+  //     });
+
+  //     const result = await response.json();
+  //     console.log("Успех:", JSON.stringify(result));
+
+  //    const event = new Event("product-saved");
+  //    this.element.dispatchEvent(event);
+
+  //   } catch (error) {
+  //     console.log("Ошибка:", error);
+  //   }
+  // }
+
+  // onUploadBtnClick() {
+  //   const inputElement = document.createElement('input');
+  //   inputElement.type = "file";
+  //   inputElement.accept = "image/*";
+  //   inputElement.style = "display:none";
+
+  //   document.body.append(inputElement);
+
+  //   inputElement.addEventListener("change", () => {
+  //     this.upload(inputElement.files[0]);
+  //   }, { once: true });
+
+  //   inputElement.click();
+  // }
+
   createListeners() {
-    const uploadBtn = this.element.querySelector('button[name="uploadImage"]');
+    // const uploadBtn = this.element.querySelector('button[name="uploadImage"]');
+    // this.onUploadBtnClick = this.onUploadBtnClick.bind(this);
+    // uploadBtn.addEventListener('click', this.onUploadBtnClick);
+
     const saveBtn = this.element.querySelector('button[name="save"]');
 
-    this.onUploadBtnClick = this.onUploadBtnClick.bind(this);
+    this.onSaveBtnClick = this.onSaveBtnClick.bind(this);
 
-    uploadBtn.addEventListener('click', this.onUploadBtnClick);
     saveBtn.addEventListener('click', this.onSaveBtnClick);
   }
 
   destroyListeners() {
-    uploadBtn.removeEventListener('click', this.onUploadBtnClick);
+    // uploadBtn.removeEventListener('click', this.onUploadBtnClick);
+
     saveBtn.removeEventListener('click', this.onSaveBtnClick);
   }
 
