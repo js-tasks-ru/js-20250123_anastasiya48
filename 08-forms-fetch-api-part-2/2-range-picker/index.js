@@ -22,12 +22,6 @@ export default class RangePicker {
     this.isPeriod = false;
     this.weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
-    this.arrow = `       
-      <div class="rangepicker__selector-arrow"></div>
-      <div class="rangepicker__selector-control-left"></div>
-      <div class="rangepicker__selector-control-right"></div>
-    `;
-
     this.element = this.createInputElement();
     this.selectSubElements();
     this.createListeners();
@@ -56,6 +50,18 @@ export default class RangePicker {
   }
 
   createCalendarElement() {
+    const { rightMonth, rightYear } = this.calcRightDateForCalendar();
+
+    return `
+      <div class="rangepicker__selector-arrow"></div>
+      <div class="rangepicker__selector-control-left"></div>
+      <div class="rangepicker__selector-control-right"></div>
+      ${this.createCalendarPart(this.leftMonth, this.leftYear)}
+      ${this.createCalendarPart(rightMonth, rightYear)}
+    `;
+  }
+
+  calcRightDateForCalendar() {
     let rightMonth = this.leftMonth + 1;
     let rightYear = this.leftYear;
 
@@ -64,10 +70,10 @@ export default class RangePicker {
       rightYear += 1;
     }
 
-    return `
-      ${this.createCalendarPart(this.leftMonth, this.leftYear)}
-      ${this.createCalendarPart(rightMonth, rightYear)}
-    `;
+    return {
+      rightMonth,
+      rightYear,
+    };
   }
 
   createCalendarPart(month, year) {
@@ -148,11 +154,18 @@ export default class RangePicker {
     this.subElements.from.innerHTML = this.from.dateString();
     this.subElements.to.innerHTML = this.to.dateString();
 
-    if (this.subElements.selector.lastElementChild) {
-      this.subElements.selector.lastElementChild.remove();
-      this.subElements.selector.lastElementChild.remove();
+    this.updateCalendar();
+  }
+
+  updateCalendar() {
+    const [leftCalendar, rightCalendar] = this.element.querySelectorAll('.rangepicker__calendar');
+    
+    if (leftCalendar) {
+      const { rightMonth, rightYear } = this.calcRightDateForCalendar();
+
+      leftCalendar.outerHTML = this.createCalendarPart(this.leftMonth, this.leftYear);
+      rightCalendar.outerHTML = this.createCalendarPart(rightMonth, rightYear);
     }
-    this.subElements.selector.innerHTML += this.createCalendarElement();
   }
 
   changePeriod(clickDay) {
@@ -194,11 +207,7 @@ export default class RangePicker {
         this.leftYear = this.leftYear - 1;
       }
 
-      if (this.subElements.selector.lastElementChild) {
-        this.subElements.selector.lastElementChild.remove();
-        this.subElements.selector.lastElementChild.remove();
-      }
-      this.subElements.selector.innerHTML += this.createCalendarElement();
+      this.updateCalendar();
     } 
 
     else if (event.target.classList[0] === 'rangepicker__selector-control-right') {
@@ -209,11 +218,7 @@ export default class RangePicker {
         this.leftYear = this.leftYear + 1;
       }
 
-      if (this.subElements.selector.lastElementChild) {
-        this.subElements.selector.lastElementChild.remove();
-        this.subElements.selector.lastElementChild.remove();
-      }
-      this.subElements.selector.innerHTML += this.createCalendarElement();
+      this.updateCalendar();
     } 
 
     else if (event.target.classList[0] === 'rangepicker__input') {
@@ -233,7 +238,7 @@ export default class RangePicker {
     this.onClick = this.onClick.bind(this);
     
     inputElement.addEventListener('click', () => {
-      this.subElements.selector.innerHTML = this.arrow + this.createCalendarElement();
+      this.subElements.selector.innerHTML = this.createCalendarElement();
     }, { once: true });
 
     window.addEventListener('click', this.onClick);
