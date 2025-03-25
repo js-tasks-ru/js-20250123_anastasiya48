@@ -78,7 +78,7 @@ export default class RangePicker {
 
   createCalendarPart(month, year) {
     const day = new Date(year, month - 1, 1);
-    const monthsName = day.toLocaleString('default', { month: 'long' });
+    const monthsName = day.toLocaleString('ru-RU', { month: 'long' });
     const weekDay = [7, 1, 2, 3, 4, 5, 6][day.getDay()]; 
     const daysCount = new Date(year, month, 0).getDate();
 
